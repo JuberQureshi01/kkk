@@ -10,7 +10,7 @@ const ArtistListingPage = () => {
   const artists = data as Artist[];
 
  const uniqueCategories = Array.from(
-  new Set(artists.flatMap((a) => a.category)) // ✅ flatten all arrays into one
+  new Set(artists.flatMap((a) => a.category)) 
 );
   const uniqueLocations = Array.from(new Set(artists.map((a) => a.location)));
 
