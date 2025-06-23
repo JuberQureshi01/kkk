@@ -9,7 +9,9 @@ import { FiChevronDown } from "react-icons/fi";
 const ArtistListingPage = () => {
   const artists = data as Artist[];
 
-  const uniqueCategories = Array.from(new Set(artists.map((a) => a.category)));
+ const uniqueCategories = Array.from(
+  new Set(artists.flatMap((a) => a.category)) // ✅ flatten all arrays into one
+);
   const uniqueLocations = Array.from(new Set(artists.map((a) => a.location)));
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -27,15 +29,17 @@ const ArtistListingPage = () => {
     );
   };
 
-  const filteredArtists = artists.filter((artist) => {
-    const categoryMatch =
-      selectedCategories.length === 0 ||
-      selectedCategories.includes(artist.category);
-    const locationMatch =
-      selectedLocations.length === 0 ||
-      selectedLocations.includes(artist.location);
-    return categoryMatch && locationMatch;
-  });
+const filteredArtists = artists.filter((artist) => {
+  const categoryMatch =
+    selectedCategories.length === 0 ||
+    artist.category.some((cat) => selectedCategories.includes(cat));
+
+  const locationMatch =
+    selectedLocations.length === 0 ||
+    selectedLocations.includes(artist.location);
+
+  return categoryMatch && locationMatch;
+});
 
   return (
     <div className="p-6 max-w-screen-xl mx-auto">

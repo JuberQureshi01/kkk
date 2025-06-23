@@ -1,11 +1,13 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, SubmitHandler } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useState } from 'react';
 import { FiUser, FiMapPin, FiImage, FiEdit3 } from 'react-icons/fi';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
+
 
 const categoryOptions = ['Singer', 'DJ', 'Dancer', 'Speaker'];
 const languageOptions = ['Hindi', 'English', 'Punjabi', 'Bengali'];
@@ -23,21 +25,24 @@ type FormData = {
 
 const schema = yup.object({
   name: yup.string().required('Name is required'),
-  bio: yup.string().min(20, 'Bio must be at least 20 characters').required(),
-  category: yup.array().of(yup.string()).min(1, 'Select at least one category'),
-  languages: yup.array().of(yup.string()).min(1, 'Select at least one language'),
-  fee: yup.string().required('Fee range is required'),
+  bio: yup.string().min(20, 'Bio must be at least 20 characters').required('Bio is required'),
+  category: yup.array().of(yup.string().required()).min(1, 'Select at least one category'),
+  languages: yup.array().of(yup.string().required()).min(1, 'Select at least one language'),
+  fee: yup.string().required('Fee is required'),
   location: yup.string().required('Location is required'),
-  profileImage: yup.mixed().notRequired(),
+  profileImage: yup.mixed<FileList>().notRequired(),
 });
 
 export default function OnboardPage() {
+
+   const router = useRouter();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({
-    resolver: yupResolver(schema),
+    resolver: yupResolver(schema) as unknown as (data: any) => any, 
     defaultValues: {
       category: [],
       languages: [],
@@ -52,22 +57,24 @@ export default function OnboardPage() {
       setPreview(URL.createObjectURL(file));
     }
   };
-const onSubmit = (data: FormData) => {
-  const existing = JSON.parse(localStorage.getItem('artists') || '[]');
-  const newArtist = { id: Date.now(), ...data };
-  localStorage.setItem('artists', JSON.stringify([...existing, newArtist]));
 
-  toast.success('Artist profile submitted successfully!');
-};
+  const onSubmit: SubmitHandler<FormData> = (data) => {
+    const existing = JSON.parse(localStorage.getItem('artists') || '[]');
+    const newArtist = { id: Date.now(), ...data };
+    localStorage.setItem('artists', JSON.stringify([...existing, newArtist]));
+    toast.success('Artist profile submitted successfully!');
+    router.push("/dashboard");
+
+  };
+
   return (
     <main className="max-w-3xl mx-auto px-6 py-10">
       <h1 className="text-3xl font-bold mb-6">Artist Onboarding Form</h1>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-
         {/* Name */}
         <div>
-          <label className=" font-medium mb-1 flex items-center gap-2">
+          <label className="font-medium mb-1 flex items-center gap-2">
             <FiUser /> Name
           </label>
           <input
@@ -80,7 +87,7 @@ const onSubmit = (data: FormData) => {
 
         {/* Bio */}
         <div>
-          <label className=" font-medium mb-1 flex items-center gap-2">
+          <label className="font-medium mb-1 flex items-center gap-2">
             <FiEdit3 /> Bio
           </label>
           <textarea
@@ -97,10 +104,7 @@ const onSubmit = (data: FormData) => {
           <label className="block font-medium mb-2">Select Categories</label>
           <div className="flex flex-wrap gap-3">
             {categoryOptions.map((cat) => (
-              <label
-                key={cat}
-                className="flex items-center gap-2 border px-4 py-2 rounded-full cursor-pointer"
-              >
+              <label key={cat} className="flex items-center gap-2 border px-4 py-2 rounded-full cursor-pointer">
                 <input
                   type="checkbox"
                   value={cat}
@@ -119,10 +123,7 @@ const onSubmit = (data: FormData) => {
           <label className="block font-medium mb-2">Languages Spoken</label>
           <div className="flex flex-wrap gap-3">
             {languageOptions.map((lang) => (
-              <label
-                key={lang}
-                className="flex items-center gap-2 border px-4 py-2 rounded-full cursor-pointer"
-              >
+              <label key={lang} className="flex items-center gap-2 border px-4 py-2 rounded-full cursor-pointer">
                 <input
                   type="checkbox"
                   value={lang}
@@ -145,9 +146,7 @@ const onSubmit = (data: FormData) => {
           >
             <option value="">Select your fee range</option>
             {feeOptions.map((fee) => (
-              <option key={fee} value={fee}>
-                {fee}
-              </option>
+              <option key={fee} value={fee}>{fee}</option>
             ))}
           </select>
           <p className="text-sm text-red-500">{errors.fee?.message}</p>
@@ -155,7 +154,7 @@ const onSubmit = (data: FormData) => {
 
         {/* Location */}
         <div>
-          <label className=" font-medium mb-1 flex items-center gap-2">
+          <label className="font-medium mb-1 flex items-center gap-2">
             <FiMapPin /> Location
           </label>
           <input
@@ -168,7 +167,7 @@ const onSubmit = (data: FormData) => {
 
         {/* Profile Image */}
         <div>
-          <label className=" font-medium mb-1 flex items-center gap-2">
+          <label className="font-medium mb-1 flex items-center gap-2">
             <FiImage /> Profile Image (optional)
           </label>
           <input
